@@ -4,7 +4,7 @@ A lightweight Mermaid diagram viewer built with plain HTML, CSS, and JavaScript.
 
 This app runs directly from a local file and does not require Node.js, npm, or a web server.
 
-**[Try Mermaid viewer live →](https://hakimsjo.github.io/mermaid-viewer/)**
+**[Try Mermaid viewer live →](https://htmlpreview.github.io/?https://github.com/hakimsjo/mermaid-viewer/blob/master/index.html)**
 
 ## Features
 
