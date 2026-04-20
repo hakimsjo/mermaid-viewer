@@ -8,15 +8,68 @@
   <style>
     :root {
       color-scheme: light;
-      --bg: #f5efe2;
-      --panel: rgba(255, 251, 245, 0.9);
-      --panel-strong: #fffdf8;
-      --ink: #1d1b19;
-      --muted: #6d655b;
-      --accent: #b14d2d;
-      --accent-strong: #8d3519;
-      --line: rgba(29, 27, 25, 0.14);
-      --shadow: 0 22px 50px rgba(82, 53, 29, 0.18);
+      --bg: #f8f9fa;
+      --panel: rgba(255, 255, 255, 0.95);
+      --panel-strong: #ffffff;
+      --ink: #212529;
+      --muted: #6c757d;
+      --accent: #0d6efd;
+      --accent-strong: #0b5ed7;
+      --line: rgba(0, 0, 0, 0.1);
+      --ctrl-bg: #ffffff;
+      --ctrl-bg-hover: #f8f9fa;
+      --ctrl-border: rgba(0, 0, 0, 0.14);
+      --shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        color-scheme: dark;
+        --bg: #212529;
+        --panel: rgba(33, 37, 41, 0.95);
+        --panel-strong: #2d3139;
+        --ink: #f8f9fa;
+        --muted: #adb5bd;
+        --accent: #0d6efd;
+        --accent-strong: #0b5ed7;
+        --line: rgba(255, 255, 255, 0.1);
+        --ctrl-bg: #343a40;
+        --ctrl-bg-hover: #3f464d;
+        --ctrl-border: rgba(255, 255, 255, 0.22);
+        --shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.75);
+      }
+    }
+
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --bg: #212529;
+      --panel: rgba(33, 37, 41, 0.95);
+      --panel-strong: #2d3139;
+      --ink: #f8f9fa;
+      --muted: #adb5bd;
+      --accent: #0d6efd;
+      --accent-strong: #0b5ed7;
+      --line: rgba(255, 255, 255, 0.1);
+      --ctrl-bg: #343a40;
+      --ctrl-bg-hover: #3f464d;
+      --ctrl-border: rgba(255, 255, 255, 0.22);
+      --shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.75);
+    }
+
+    html[data-theme="light"] {
+      color-scheme: light;
+      --bg: #f8f9fa;
+      --panel: rgba(255, 255, 255, 0.95);
+      --panel-strong: #ffffff;
+      --ink: #212529;
+      --muted: #6c757d;
+      --accent: #0d6efd;
+      --accent-strong: #0b5ed7;
+      --line: rgba(0, 0, 0, 0.1);
+      --ctrl-bg: #ffffff;
+      --ctrl-bg-hover: #f8f9fa;
+      --ctrl-border: rgba(0, 0, 0, 0.14);
+      --shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
     }
 
     * {
@@ -28,10 +81,7 @@
       min-height: 100vh;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
       color: var(--ink);
-      background:
-        radial-gradient(circle at top left, rgba(177, 77, 45, 0.18), transparent 24%),
-        radial-gradient(circle at bottom right, rgba(56, 124, 89, 0.16), transparent 30%),
-        linear-gradient(135deg, #efe1bf 0%, #f8f3e7 46%, #e5dccd 100%);
+      background: linear-gradient(180deg, var(--bg) 0%, var(--panel-strong) 100%);
     }
 
     .shell {
@@ -88,19 +138,19 @@
       letter-spacing: 0.01em;
       cursor: pointer;
       color: #fff8f0;
-      background: linear-gradient(160deg, #c9572f 0%, #9a3116 100%);
-      box-shadow: 0 4px 16px rgba(177, 77, 45, 0.35),
+      background: linear-gradient(160deg, var(--accent) 0%, var(--accent-strong) 100%);
+      box-shadow: 0 4px 16px rgba(13, 110, 253, 0.35),
                   inset 0 1px 0 rgba(255, 255, 255, 0.14);
       transition: transform 120ms ease, box-shadow 120ms ease;
     }
     .btn-primary:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(177, 77, 45, 0.42),
+      box-shadow: 0 8px 24px rgba(13, 110, 253, 0.42),
                   inset 0 1px 0 rgba(255, 255, 255, 0.14);
     }
     .btn-primary:active {
       transform: translateY(0);
-      box-shadow: 0 2px 6px rgba(177, 77, 45, 0.28);
+      box-shadow: 0 2px 6px rgba(13, 110, 253, 0.28);
     }
     .btn-primary .btn-shortcut {
       margin-left: auto;
@@ -123,19 +173,19 @@
       gap: 6px;
       flex: 1;
       padding: 9px 10px;
-      border: 1px solid rgba(29, 27, 25, 0.15);
+      border: 1px solid var(--ctrl-border);
       border-radius: 12px;
       font: inherit;
       font-size: 0.88rem;
       cursor: pointer;
       color: var(--ink);
-      background: rgba(255, 251, 245, 0.75);
+      background: var(--ctrl-bg);
       box-shadow: 0 1px 3px rgba(29, 27, 25, 0.07),
                   inset 0 1px 0 rgba(255, 255, 255, 0.7);
       transition: background 120ms ease, transform 120ms ease, box-shadow 120ms ease;
     }
     .btn-ghost:hover {
-      background: rgba(255, 248, 238, 1);
+      background: var(--ctrl-bg-hover);
       transform: translateY(-1px);
       box-shadow: 0 4px 10px rgba(29, 27, 25, 0.1),
                   inset 0 1px 0 rgba(255, 255, 255, 0.7);
@@ -158,20 +208,20 @@
       justify-content: center;
       gap: 5px;
       padding: 8px 13px;
-      border: 1px solid rgba(29, 27, 25, 0.14);
+      border: 1px solid var(--ctrl-border);
       border-radius: 10px;
       font: inherit;
       font-size: 0.88rem;
       cursor: pointer;
       white-space: nowrap;
       color: var(--ink);
-      background: rgba(255, 251, 245, 0.82);
+      background: var(--ctrl-bg);
       box-shadow: 0 1px 3px rgba(29, 27, 25, 0.07),
                   inset 0 1px 0 rgba(255, 255, 255, 0.65);
       transition: background 120ms ease, transform 120ms ease, box-shadow 120ms ease;
     }
     .btn-icon:hover {
-      background: rgba(255, 248, 238, 1);
+      background: var(--ctrl-bg-hover);
       transform: translateY(-1px);
       box-shadow: 0 4px 10px rgba(29, 27, 25, 0.1),
                   inset 0 1px 0 rgba(255, 255, 255, 0.65);
@@ -180,14 +230,38 @@
       transform: translateY(0);
     }
     .btn-icon.is-accent {
-      color: #8d3519;
-      border-color: rgba(177, 77, 45, 0.28);
-      background: rgba(255, 240, 228, 0.9);
+      color: #ffffff;
+      border-color: var(--accent-strong);
+      background: var(--accent);
     }
     .btn-icon.is-accent:hover {
-      background: rgba(255, 232, 215, 1);
+      background: var(--accent-strong);
     }
     .btn-icon .bicon { font-size: 1em; line-height: 1; }
+
+.theme-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      font: inherit;
+      font-size: 0.88rem;
+      cursor: pointer;
+      color: var(--ink);
+      background: var(--panel-strong);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07);
+      transition: background 120ms ease, transform 120ms ease;
+    }
+    .theme-toggle:hover {
+      background: var(--panel);
+      transform: translateY(-1px);
+    }
+    .theme-toggle:active {
+      transform: translateY(0);
+    }
 
     textarea {
       width: 100%;
@@ -268,11 +342,7 @@
       overflow: hidden;
       border-radius: 20px;
       border: 1px solid var(--line);
-      background:
-        linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
-        linear-gradient(180deg, #fffdf8, #f7f0e4);
-      background-size: 24px 24px, 24px 24px, auto;
+      background: linear-gradient(180deg, var(--panel-strong), var(--panel));
       cursor: grab;
     }
 
@@ -354,6 +424,10 @@
         <button id="clearButton" class="btn-ghost" type="button">
           <span class="bicon">✕</span> Clear
         </button>
+        <button id="themeToggle" class="btn-ghost" type="button" title="Toggle light/dark mode">
+          <span id="themeIcon" class="bicon">◐</span>
+          Theme
+        </button>
       </div>
 
       <label for="source" class="hint">Mermaid code</label>
@@ -404,7 +478,7 @@
         <div id="stage" class="diagram-stage">
           <div id="diagram" class="diagram"></div>
         </div>
-      </div>
+    </div>
     </section>
   </main>
 
@@ -457,6 +531,34 @@
         securityLevel: "loose",
         theme: "default"
       });
+
+      function applyMermaidTheme(themeName) {
+        const isDark = themeName === "dark";
+        window.mermaid.initialize({
+          startOnLoad: false,
+          securityLevel: "loose",
+          theme: isDark ? "dark" : "default",
+          themeVariables: isDark
+            ? {
+                lineColor: "#dee2e6",
+                primaryTextColor: "#f8f9fa",
+                secondaryTextColor: "#f8f9fa",
+                tertiaryTextColor: "#f8f9fa",
+                noteTextColor: "#f8f9fa",
+                signalColor: "#dee2e6",
+                actorTextColor: "#f8f9fa"
+              }
+            : {
+                lineColor: "#212529",
+                primaryTextColor: "#212529",
+                secondaryTextColor: "#212529",
+                tertiaryTextColor: "#212529",
+                noteTextColor: "#212529",
+                signalColor: "#212529",
+                actorTextColor: "#212529"
+              }
+        });
+      }
 
       function setStatus(message, isError = false) {
         statusEl.textContent = message;
@@ -556,6 +658,31 @@
       }
 
       renderButton.addEventListener("click", renderDiagram);
+
+      // Theme toggle
+      const themeToggle = document.getElementById("themeToggle");
+      const themeIcon = document.getElementById("themeIcon");
+      const html = document.documentElement;
+      const savedTheme = localStorage.getItem("theme") || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+
+      function applyTheme(themeName, rerender = true) {
+        html.setAttribute("data-theme", themeName);
+        applyMermaidTheme(themeName);
+        themeIcon.textContent = themeName === "dark" ? "☀" : "◐";
+        themeToggle.title = themeName === "dark" ? "Switch to light mode" : "Switch to dark mode";
+        if (rerender && sourceEl.value.trim()) {
+          renderDiagram();
+        }
+      }
+
+      applyTheme(savedTheme, false);
+      
+      themeToggle.addEventListener("click", () => {
+        const currentTheme = html.getAttribute("data-theme");
+        const newTheme = currentTheme === "dark" ? "light" : "dark";
+        localStorage.setItem("theme", newTheme);
+        applyTheme(newTheme, true);
+      });
       sampleButton.addEventListener("click", () => {
         sourceEl.value = sampleDiagram;
         renderDiagram();
@@ -638,3 +765,9 @@
   </script>
 </body>
 </html>
+
+
+
+
+
+
