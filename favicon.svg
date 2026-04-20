@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="8" fill="#c9572f"/>
+  <!-- flowchart nodes -->
+  <rect x="11" y="3" width="10" height="7" rx="2" fill="#fff8f0" opacity="0.95"/>
+  <rect x="11" y="14" width="10" height="7" rx="2" fill="#fff8f0" opacity="0.95"/>
+  <rect x="11" y="25" width="10" height="4" rx="1.5" fill="#fff8f0" opacity="0.7"/>
+  <!-- connecting lines -->
+  <line x1="16" y1="10" x2="16" y2="14" stroke="#fff8f0" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="16" y1="21" x2="16" y2="25" stroke="#fff8f0" stroke-width="1.8" stroke-linecap="round"/>
+</svg>
