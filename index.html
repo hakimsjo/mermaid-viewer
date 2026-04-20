@@ -276,6 +276,40 @@
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
     }
 
+    .storage-tools {
+      margin-top: 12px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .storage-input,
+    .storage-select {
+      width: 100%;
+      border: 1px solid var(--ctrl-border);
+      border-radius: 10px;
+      padding: 9px 10px;
+      font: inherit;
+      font-size: 0.9rem;
+      color: var(--ink);
+      background: var(--ctrl-bg);
+      outline: none;
+    }
+
+    .storage-input:focus,
+    .storage-select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.25);
+    }
+
+    .storage-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .storage-row .btn-ghost {
+      margin: 0;
+    }
+
     .status {
       min-height: 24px;
       margin-top: 12px;
@@ -439,6 +473,17 @@
     Fix --> Input
     View --> Zoom[Zoom and pan]</textarea>
 
+      <div class="storage-tools">
+        <label for="diagramSelect" class="hint">Saved diagrams</label>
+        <select id="diagramSelect" class="storage-select" aria-label="Saved diagrams"></select>
+        <input id="diagramNameInput" class="storage-input" type="text" placeholder="Diagram name">
+        <div class="storage-row">
+          <button id="saveDiagramButton" class="btn-ghost" type="button">Save</button>
+          <button id="openDiagramButton" class="btn-ghost" type="button">Open</button>
+          <button id="deleteDiagramButton" class="btn-ghost" type="button">Delete</button>
+        </div>
+      </div>
+
       <button id="renderButton" class="btn-primary" type="button">
         <svg width="13" height="14" viewBox="0 0 13 14" fill="none" aria-hidden="true"><path d="M2 1.5L12 7L2 12.5V1.5Z" fill="currentColor"/></svg>
         Render
@@ -493,6 +538,11 @@
       const renderButton = document.getElementById("renderButton");
       const sampleButton = document.getElementById("sampleButton");
       const clearButton = document.getElementById("clearButton");
+      const diagramSelect = document.getElementById("diagramSelect");
+      const diagramNameInput = document.getElementById("diagramNameInput");
+      const saveDiagramButton = document.getElementById("saveDiagramButton");
+      const openDiagramButton = document.getElementById("openDiagramButton");
+      const deleteDiagramButton = document.getElementById("deleteDiagramButton");
       const zoomInButton = document.getElementById("zoomInButton");
       const zoomOutButton = document.getElementById("zoomOutButton");
       const resetButton = document.getElementById("resetButton");
@@ -510,6 +560,9 @@
     Mermaid-->>Viewer: SVG
     Viewer-->>User: Display zoomable diagram`;
 
+      const STORAGE_DIAGRAMS_KEY = "mermaidViewer.diagrams";
+      const STORAGE_LAST_DIAGRAM_KEY = "mermaidViewer.lastDiagramId";
+
 
       const viewState = {
         scale: 1,
@@ -520,6 +573,8 @@
         startY: 0,
         renderedSvg: ""
       };
+
+      let savedDiagrams = [];
 
       if (!window.mermaid) {
         setStatus("Failed to load the Mermaid library.", true);
@@ -563,6 +618,138 @@
       function setStatus(message, isError = false) {
         statusEl.textContent = message;
         statusEl.classList.toggle("error", isError);
+      }
+
+      function loadSavedDiagrams() {
+        try {
+          const raw = localStorage.getItem(STORAGE_DIAGRAMS_KEY);
+          const parsed = raw ? JSON.parse(raw) : [];
+          if (!Array.isArray(parsed)) {
+            return [];
+          }
+          return parsed
+            .filter((item) => item && typeof item.id === "string" && typeof item.name === "string" && typeof item.source === "string")
+            .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+        } catch (_) {
+          return [];
+        }
+      }
+
+      function persistSavedDiagrams() {
+        localStorage.setItem(STORAGE_DIAGRAMS_KEY, JSON.stringify(savedDiagrams));
+      }
+
+      function renderSavedDiagramOptions(selectedId = "") {
+        diagramSelect.innerHTML = "";
+        const placeholder = document.createElement("option");
+        placeholder.value = "";
+        placeholder.textContent = savedDiagrams.length ? "Select a diagram" : "No saved diagrams";
+        diagramSelect.appendChild(placeholder);
+
+        savedDiagrams.forEach((diagram) => {
+          const option = document.createElement("option");
+          option.value = diagram.id;
+          option.textContent = diagram.name;
+          diagramSelect.appendChild(option);
+        });
+
+        if (selectedId && savedDiagrams.some((item) => item.id === selectedId)) {
+          diagramSelect.value = selectedId;
+        } else {
+          diagramSelect.value = "";
+        }
+      }
+
+      function findDiagramById(id) {
+        return savedDiagrams.find((item) => item.id === id) || null;
+      }
+
+      function openDiagramById(id) {
+        const diagram = findDiagramById(id);
+        if (!diagram) {
+          setStatus("Saved diagram was not found.", true);
+          return false;
+        }
+        sourceEl.value = diagram.source;
+        diagramNameInput.value = diagram.name;
+        diagramSelect.value = diagram.id;
+        localStorage.setItem(STORAGE_LAST_DIAGRAM_KEY, diagram.id);
+        setStatus(`Opened: ${diagram.name}`);
+        renderDiagram();
+        return true;
+      }
+
+      function saveCurrentDiagram() {
+        const source = sourceEl.value.trim();
+        if (!source) {
+          setStatus("Cannot save an empty Mermaid diagram.", true);
+          return;
+        }
+
+        const now = Date.now();
+        const enteredName = diagramNameInput.value.trim();
+        const selectedId = diagramSelect.value;
+        let target = selectedId ? findDiagramById(selectedId) : null;
+
+        if (!target && enteredName) {
+          target = savedDiagrams.find((item) => item.name.toLowerCase() === enteredName.toLowerCase()) || null;
+        }
+
+        if (target) {
+          target.name = enteredName || target.name;
+          target.source = source;
+          target.updatedAt = now;
+          setStatus(`Updated: ${target.name}`);
+        } else {
+          target = {
+            id: `${now}-${Math.random().toString(36).slice(2, 7)}`,
+            name: enteredName || `Diagram ${savedDiagrams.length + 1}`,
+            source,
+            updatedAt: now
+          };
+          savedDiagrams.push(target);
+          setStatus(`Saved: ${target.name}`);
+        }
+
+        savedDiagrams.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+        persistSavedDiagrams();
+        localStorage.setItem(STORAGE_LAST_DIAGRAM_KEY, target.id);
+        renderSavedDiagramOptions(target.id);
+        diagramNameInput.value = target.name;
+      }
+
+      function openSelectedDiagram() {
+        const id = diagramSelect.value;
+        if (!id) {
+          setStatus("Select a saved diagram to open.", true);
+          return;
+        }
+        openDiagramById(id);
+      }
+
+      function deleteSelectedDiagram() {
+        const id = diagramSelect.value;
+        if (!id) {
+          setStatus("Select a saved diagram to delete.", true);
+          return;
+        }
+
+        const target = findDiagramById(id);
+        savedDiagrams = savedDiagrams.filter((item) => item.id !== id);
+        persistSavedDiagrams();
+
+        const currentLast = localStorage.getItem(STORAGE_LAST_DIAGRAM_KEY);
+        if (currentLast === id) {
+          if (savedDiagrams.length) {
+            localStorage.setItem(STORAGE_LAST_DIAGRAM_KEY, savedDiagrams[0].id);
+          } else {
+            localStorage.removeItem(STORAGE_LAST_DIAGRAM_KEY);
+          }
+        }
+
+        renderSavedDiagramOptions("");
+        diagramNameInput.value = "";
+        setStatus(target ? `Deleted: ${target.name}` : "Deleted.");
       }
 
       function updateTransform() {
@@ -694,6 +881,13 @@
         resetView();
         setStatus("Cleared.");
       });
+      diagramSelect.addEventListener("change", () => {
+        const selected = findDiagramById(diagramSelect.value);
+        diagramNameInput.value = selected ? selected.name : "";
+      });
+      saveDiagramButton.addEventListener("click", saveCurrentDiagram);
+      openDiagramButton.addEventListener("click", openSelectedDiagram);
+      deleteDiagramButton.addEventListener("click", deleteSelectedDiagram);
       zoomInButton.addEventListener("click", () => zoom(1.2, canvasEl.clientWidth / 2, canvasEl.clientHeight / 2));
       zoomOutButton.addEventListener("click", () => zoom(1 / 1.2, canvasEl.clientWidth / 2, canvasEl.clientHeight / 2));
       resetButton.addEventListener("click", resetView);
@@ -758,6 +952,13 @@
           renderDiagram();
         }
       });
+
+      savedDiagrams = loadSavedDiagrams();
+      renderSavedDiagramOptions();
+      const lastDiagramId = localStorage.getItem(STORAGE_LAST_DIAGRAM_KEY);
+      if (lastDiagramId && !openDiagramById(lastDiagramId) && savedDiagrams.length) {
+        openDiagramById(savedDiagrams[0].id);
+      }
 
       updateTransform();
       renderDiagram();

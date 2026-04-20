@@ -13,6 +13,9 @@ This app runs directly from a local file and does not require Node.js, npm, or a
 - Fullscreen toggle
 - Export rendered diagram as SVG
 - Light and dark mode toggle with saved preference
+- Save Mermaid code to localStorage
+- Open and delete saved diagrams from localStorage
+- Automatically opens the most recently used saved diagram
 - Responsive layout for desktop and mobile
 
 ## Project Structure
@@ -38,6 +41,10 @@ That is all. No build step is required.
    - **SVG** to download
    - **Expand** for fullscreen
 4. Use the theme button in the code panel to switch light/dark mode.
+5. Use the save tools under the editor:
+   - Enter a name and click Save
+   - Select a diagram and click Open
+   - Select a diagram and click Delete
 
 ## Keyboard Shortcuts
 
