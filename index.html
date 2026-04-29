@@ -8,6 +8,7 @@
   <style>
     :root {
       color-scheme: light;
+      --panel-width: 420px;
       --bg: #f8f9fa;
       --panel: rgba(255, 255, 255, 0.95);
       --panel-strong: #ffffff;
@@ -86,10 +87,21 @@
 
     .shell {
       display: grid;
-      grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
+      grid-template-columns: minmax(280px, var(--panel-width)) 10px minmax(0, 1fr);
       min-height: 100vh;
-      gap: 20px;
+      gap: 0;
       padding: 20px;
+      align-items: stretch;
+    }
+
+    .shell.editor-expanded {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 20px;
+    }
+
+    .shell.editor-expanded .splitter,
+    .shell.editor-expanded .viewer {
+      display: none;
     }
 
     .panel,
@@ -105,6 +117,32 @@
       display: flex;
       flex-direction: column;
       padding: 22px;
+    }
+
+    .splitter {
+      width: 10px;
+      cursor: col-resize;
+      position: relative;
+      user-select: none;
+      touch-action: none;
+    }
+
+    .splitter::before {
+      content: "";
+      position: absolute;
+      top: 12px;
+      bottom: 12px;
+      left: 50%;
+      width: 4px;
+      transform: translateX(-50%);
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(13, 110, 253, 0.18), rgba(13, 110, 253, 0.3));
+      transition: background 120ms ease;
+    }
+
+    .splitter:hover::before,
+    .splitter.is-dragging::before {
+      background: linear-gradient(180deg, rgba(13, 110, 253, 0.35), rgba(13, 110, 253, 0.48));
     }
 
     h1 {
@@ -413,6 +451,11 @@
     @media (max-width: 700px) {
       .shell {
         grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+      .splitter {
+        display: none;
       }
 
       textarea {
@@ -458,6 +501,9 @@
         <button id="clearButton" class="btn-ghost" type="button">
           <span class="bicon">✕</span> Clear
         </button>
+        <button id="expandEditorButton" class="btn-ghost" type="button" title="Expand editor">
+          <span class="bicon">⤢</span> Expand editor
+        </button>
         <button id="themeToggle" class="btn-ghost" type="button" title="Toggle light/dark mode">
           <span id="themeIcon" class="bicon">◐</span>
           Theme
@@ -491,6 +537,8 @@
       </button>
       <div id="status" class="status">Ready to render.</div>
     </section>
+
+    <div id="splitter" class="splitter" role="separator" aria-orientation="vertical" aria-label="Resize editor and viewer" aria-valuemin="280" aria-valuemax="900"></div>
 
     <section class="viewer">
       <div class="viewer-header">
@@ -538,6 +586,7 @@
       const renderButton = document.getElementById("renderButton");
       const sampleButton = document.getElementById("sampleButton");
       const clearButton = document.getElementById("clearButton");
+      const expandEditorButton = document.getElementById("expandEditorButton");
       const diagramSelect = document.getElementById("diagramSelect");
       const diagramNameInput = document.getElementById("diagramNameInput");
       const saveDiagramButton = document.getElementById("saveDiagramButton");
@@ -549,6 +598,11 @@
       const downloadButton = document.getElementById("downloadButton");
       const maximizeButton = document.getElementById("maximizeButton");
       const viewerEl = document.querySelector(".viewer");
+      const shellEl = document.querySelector(".shell");
+      const splitterEl = document.getElementById("splitter");
+
+      const STORAGE_PANEL_WIDTH_KEY = "mermaidViewer.panelWidth";
+      const STORAGE_EDITOR_EXPANDED_KEY = "mermaidViewer.editorExpanded";
 
       const sampleDiagram = `sequenceDiagram
     participant User as User
@@ -575,6 +629,7 @@
       };
 
       let savedDiagrams = [];
+      let editorExpanded = false;
 
       if (!window.mermaid) {
         setStatus("Failed to load the Mermaid library.", true);
@@ -618,6 +673,39 @@
       function setStatus(message, isError = false) {
         statusEl.textContent = message;
         statusEl.classList.toggle("error", isError);
+      }
+
+      function clampPanelWidth(value) {
+        const shellWidth = shellEl.clientWidth;
+        const min = 280;
+        const max = Math.max(360, shellWidth - 360);
+        return Math.min(max, Math.max(min, value));
+      }
+
+      function applyPanelWidth(width, persist = true) {
+        const clamped = clampPanelWidth(width);
+        document.documentElement.style.setProperty("--panel-width", `${clamped}px`);
+        splitterEl.setAttribute("aria-valuenow", String(Math.round(clamped)));
+        if (persist) {
+          localStorage.setItem(STORAGE_PANEL_WIDTH_KEY, String(Math.round(clamped)));
+        }
+      }
+
+      function applyEditorExpandedState(value, persist = true) {
+        editorExpanded = Boolean(value);
+        shellEl.classList.toggle("editor-expanded", editorExpanded);
+        expandEditorButton.title = editorExpanded ? "Restore split view" : "Expand editor";
+        expandEditorButton.innerHTML = editorExpanded
+          ? "<span class='bicon'>⤡</span> Restore split"
+          : "<span class='bicon'>⤢</span> Expand editor";
+
+        if (persist) {
+          localStorage.setItem(STORAGE_EDITOR_EXPANDED_KEY, editorExpanded ? "1" : "0");
+        }
+
+        if (!editorExpanded) {
+          setTimeout(fitDiagram, 50);
+        }
       }
 
       function loadSavedDiagrams() {
@@ -881,6 +969,9 @@
         resetView();
         setStatus("Cleared.");
       });
+      expandEditorButton.addEventListener("click", () => {
+        applyEditorExpandedState(!editorExpanded, true);
+      });
       diagramSelect.addEventListener("change", () => {
         const selected = findDiagramById(diagramSelect.value);
         diagramNameInput.value = selected ? selected.name : "";
@@ -947,6 +1038,48 @@
       canvasEl.addEventListener("pointercancel", stopDragging);
       window.addEventListener("resize", fitDiagram);
 
+      splitterEl.addEventListener("pointerdown", (event) => {
+        if (window.matchMedia("(max-width: 700px)").matches || editorExpanded) {
+          return;
+        }
+        splitterEl.classList.add("is-dragging");
+        splitterEl.setPointerCapture(event.pointerId);
+      });
+
+      splitterEl.addEventListener("pointermove", (event) => {
+        if (!splitterEl.classList.contains("is-dragging")) {
+          return;
+        }
+        const shellRect = shellEl.getBoundingClientRect();
+        const targetWidth = event.clientX - shellRect.left;
+        applyPanelWidth(targetWidth, false);
+      });
+
+      function stopSplitDragging(event) {
+        if (!splitterEl.classList.contains("is-dragging")) {
+          return;
+        }
+        splitterEl.classList.remove("is-dragging");
+        if (event && typeof event.pointerId === "number") {
+          splitterEl.releasePointerCapture(event.pointerId);
+        }
+        const raw = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--panel-width"));
+        if (!Number.isNaN(raw)) {
+          applyPanelWidth(raw, true);
+        }
+        setTimeout(fitDiagram, 50);
+      }
+
+      splitterEl.addEventListener("pointerup", stopSplitDragging);
+      splitterEl.addEventListener("pointercancel", stopSplitDragging);
+
+      window.addEventListener("resize", () => {
+        const raw = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--panel-width"));
+        if (!Number.isNaN(raw)) {
+          applyPanelWidth(raw, false);
+        }
+      });
+
       sourceEl.addEventListener("keydown", (event) => {
         if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
           renderDiagram();
@@ -955,6 +1088,13 @@
 
       savedDiagrams = loadSavedDiagrams();
       renderSavedDiagramOptions();
+      const savedPanelWidth = Number(localStorage.getItem(STORAGE_PANEL_WIDTH_KEY));
+      if (Number.isFinite(savedPanelWidth) && savedPanelWidth > 0) {
+        applyPanelWidth(savedPanelWidth, false);
+      } else {
+        applyPanelWidth(420, false);
+      }
+      applyEditorExpandedState(localStorage.getItem(STORAGE_EDITOR_EXPANDED_KEY) === "1", false);
       const lastDiagramId = localStorage.getItem(STORAGE_LAST_DIAGRAM_KEY);
       if (lastDiagramId && !openDiagramById(lastDiagramId) && savedDiagrams.length) {
         openDiagramById(savedDiagrams[0].id);
