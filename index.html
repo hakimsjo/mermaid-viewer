@@ -959,6 +959,9 @@
       });
       clearButton.addEventListener("click", () => {
         sourceEl.value = "";
+        diagramSelect.value = "";
+        diagramNameInput.value = "";
+        localStorage.removeItem(STORAGE_LAST_DIAGRAM_KEY);
         diagramEl.innerHTML = "";
         viewState.renderedSvg = "";
         resetView();
