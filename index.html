@@ -971,8 +971,12 @@
         applyEditorExpandedState(!editorExpanded, true);
       });
       diagramSelect.addEventListener("change", () => {
-        const selected = findDiagramById(diagramSelect.value);
-        diagramNameInput.value = selected ? selected.name : "";
+        const selectedId = diagramSelect.value;
+        if (!selectedId) {
+          diagramNameInput.value = "";
+          return;
+        }
+        openDiagramById(selectedId);
       });
       saveDiagramButton.addEventListener("click", saveCurrentDiagram);
       openDiagramButton.addEventListener("click", openSelectedDiagram);
